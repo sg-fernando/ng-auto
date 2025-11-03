@@ -1,17 +1,14 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from utils.secrets import get_secrets
+from utils.secrets import get_secrets, add_already_applied_job
 
 import time
-
-
-def scroll_to_element(driver, element):
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
 
 data = get_secrets()
 EMAIL = data.get("email")
 FIRST_NAME = data.get("first_name")
 LAST_NAME = data.get("last_name")
+ALREADY_APPLIED_JOBS = data.get("applied_jobs", [])
 
 JOB_SEARCH_BUTTON_XPATH = '//*[@id="configurable-navbar"]/div[2]/a[3]'
 
@@ -35,7 +32,8 @@ LAST_NAME_INPUT_XPATH = '//*[@id="Contact_Information_lastname"]'
 CONSIDERATION_CHECKBOX_XPATH = '//*[@id="Consideration_for_Additional_Positions_consent_choice-country_only"]'
 
 # Ethnicity/Race Definitions
-ETHNICITY_CHECKBOX_XPATH = '//*[@id="Ethnicity_Race_Definitions_Ethnicity_ID-USA_Declined_to_Answer"]'
+ETHNICITY_DECLINE_XPATH = '//*[@id="Ethnicity_Race_Definitions_Ethnicity_ID-USA_Declined_to_Answer"]'
+ETHNICITY_MULTIRACIAL_XPATH = '//*[@id="Ethnicity_Race_Definitions_Ethnicity_ID-USA_Multi"]'
 
 # Protected Veteran Definition
 PROTECTED_VETERAN_CHECKBOX_XPATH = '//*[@id="Protected_Veteran_Definition_vevraa_question"]'
@@ -62,134 +60,170 @@ TERMS_AND_CONDITIONS_CHECKBOX_XPATH = '//*[@id="Terms_and_Conditions_Terms_Accep
 # Submit Application
 SUBMIT_APPLICATION_BUTTON_CSS = '[data-test-id="submitApplicationButton"]'
 
-driver = webdriver.Firefox()
-actions = webdriver.ActionChains(driver)
+def wait(seconds=3):
+    time.sleep(seconds)
 
-driver.get("https://jobs.northropgrumman.com/careerhub/")
+def scroll_to_element(driver, element):
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+    wait(0.5)
 
-driver.implicitly_wait(10)
+def apply(driver, actions, job_id):
+    # job_location = driver.find_element(by=By.CSS_SELECTOR, value=JOB_LOCATION_CSS)
+    # location = job_location.text
 
-input("Press Enter when ready...")
+    # apply_button = driver.find_element(by=By.XPATH, value=APPLY_BUTTON_XPATH)
+    # apply_button.click()
 
-# Go to Job Search
-job_search_button = driver.find_element(by=By.XPATH, value=JOB_SEARCH_BUTTON_XPATH)
-job_search_button.click()
+    driver.get(f"https://jobs.northropgrumman.com/careerhub/explore/jobs/apply?pid={job_id}")
 
-# Set location
-location_search_input = driver.find_element(by=By.XPATH, value=LOCATION_SEARCH_INPUT_XPATH)
-location_search_input.clear()
-location_search_input.send_keys(LOCATION)
-time.sleep(.5)
-
-search_go_button = driver.find_element(by=By.CSS_SELECTOR, value=SEARCH_GO_BUTTON_CSS)
-actions.move_to_element(search_go_button).click().perform()
-
-time.sleep(5)
-
-# Click on recommended jobs
-recommended_jobs = driver.find_element(by=By.CSS_SELECTOR, value=RECOMMENDED_JOBS_CSS)
-actions.move_to_element(recommended_jobs).click().perform()
-
-# Load all jobs
-while True:
+    # Fill Contact Information
     try:
-        load_more_button = driver.find_element(by=By.CSS_SELECTOR, value=LOAD_MORE_JOBS_CSS)
-        scroll_to_element(driver, load_more_button)
-        actions.move_to_element(load_more_button).click().perform()
+        first_name_input = driver.find_element(by=By.XPATH, value=FIRST_NAME_INPUT_XPATH)
+    except: # Already applied
+        add_already_applied_job(job_id)
+        return
+    first_name_input.clear()
+    first_name_input.send_keys(FIRST_NAME)
+
+    wait()
+
+    last_name_input = driver.find_element(by=By.XPATH, value=LAST_NAME_INPUT_XPATH)
+    last_name_input.clear()
+    last_name_input.send_keys(LAST_NAME)
+
+    # Consideration for Additional Positions
+    consideration_checkbox = driver.find_element(by=By.XPATH, value=CONSIDERATION_CHECKBOX_XPATH)
+    scroll_to_element(driver, consideration_checkbox)
+    actions.move_to_element(consideration_checkbox).click().perform()
+
+    # Ethnicity/Race Definitions
+    ethnicity_multiracial_checkbox = driver.find_element(by=By.XPATH, value=ETHNICITY_MULTIRACIAL_XPATH)
+    scroll_to_element(driver, ethnicity_multiracial_checkbox)
+    actions.move_to_element(ethnicity_multiracial_checkbox).click().perform()
+    wait()
+    ethnicity_checkbox = driver.find_element(by=By.XPATH, value=ETHNICITY_DECLINE_XPATH)
+    actions.move_to_element(ethnicity_checkbox).click().perform()
+
+    # Protected Veteran Definition
+    protected_veteran_dropdown = driver.find_element(by=By.XPATH, value=PROTECTED_VETERAN_CHECKBOX_XPATH)
+    scroll_to_element(driver, protected_veteran_dropdown)
+    actions.move_to_element(protected_veteran_dropdown).click().perform()
+    wait()
+    not_a_veteran_option = driver.find_element(by=By.XPATH, value=NOT_A_VETERAN_OPTION_XPATH)
+    actions.move_to_element(not_a_veteran_option).click().perform()
+    wait()
+    actions.move_to_element(protected_veteran_dropdown).click().perform()
+    wait()
+    do_not_wish_option = driver.find_element(by=By.XPATH, value=VETERAN_DO_NOT_WISH_TO_ANSWER_OPTION_XPATH)
+    actions.move_to_element(do_not_wish_option).click().perform()
+
+    # Personal Information Questions
+    gender_dropdown = driver.find_element(by=By.XPATH, value=PERSONAL_INFO_INPUT_XPATH)
+    scroll_to_element(driver, gender_dropdown)
+    actions.move_to_element(gender_dropdown).click().perform()
+    wait()
+    male_option = driver.find_element(by=By.XPATH, value=MALE_OPTION_XPATH)
+    actions.move_to_element(male_option).click().perform()
+    wait()
+    actions.move_to_element(gender_dropdown).click().perform()
+    wait()
+    prefer_not_option = driver.find_element(by=By.XPATH, value=GENDER_DO_NOT_WISH_TO_ANSWER_OPTION_XPATH)
+    actions.move_to_element(prefer_not_option).click().perform()
+
+    # Disability Status
+    disability_status_decline = driver.find_element(by=By.XPATH, value=DISABILITY_STATUS_DECLINE_XPATH)
+    scroll_to_element(driver, disability_status_decline)
+    actions.move_to_element(disability_status_decline).click().perform()
+
+    # Position Specific Questions
+    # try:
+    #     security_clearance_none = driver.find_element(by=By.XPATH, value=SECURITY_CLEARANCE_NONE_XPATH)
+    #     scroll_to_element(driver, security_clearance_none)
+    #     actions.move_to_element(security_clearance_none).click().perform()
+    # except:
+    #     pass
+
+    try:
+        citizen_of_another_country = driver.find_element(by=By.XPATH, value=CITIZEN_OF_ANOTHER_COUNTRY_XPATH)
+        scroll_to_element(driver, citizen_of_another_country)
+        actions.move_to_element(citizen_of_another_country).click().perform()
+
+        wait()
+
+        yes_citizen_option = driver.find_element(by=By.XPATH, value=YES_CITIZEN_OF_ANOTHER_COUNTRY_XPATH)
+        actions.move_to_element(yes_citizen_option).click().perform()
     except:
-        break
+        pass
 
-# Get job IDs
-job_cards = driver.find_elements(by=By.CLASS_NAME, value=JOB_CARD_CLASS_NAME)
-job_ids = [card.get_attribute("data-card-id") for card in job_cards]
-job_ids = [id.split("::")[1] for id in job_ids]
+    # Terms and Conditions
+    terms_and_conditions_checkbox = driver.find_element(by=By.XPATH, value=TERMS_AND_CONDITIONS_CHECKBOX_XPATH)
+    scroll_to_element(driver, terms_and_conditions_checkbox)
+    actions.move_to_element(terms_and_conditions_checkbox).click().perform()
 
-# Apply for job
-job_location = driver.find_element(by=By.CSS_SELECTOR, value=JOB_LOCATION_CSS)
-location = job_location.text
+    # Submit Application
+    submit_application_button = driver.find_element(by=By.CSS_SELECTOR, value=SUBMIT_APPLICATION_BUTTON_CSS)
+    wait()
+    # move mouse to button to click slowly and jiter a bit
+    scroll_to_element(driver, submit_application_button)
+    actions.move_to_element(submit_application_button).click().perform()
 
-apply_button = driver.find_element(by=By.XPATH, value=APPLY_BUTTON_XPATH)
-apply_button.click()
+    # Check for successful submission
+    wait(10)
+    driver.get(f"https://jobs.northropgrumman.com/careerhub/explore/jobs/apply?pid={job_id}")
+    try:
+        first_name_input = driver.find_element(by=By.XPATH, value=FIRST_NAME_INPUT_XPATH)
+    except: # Successfully applied
+        print(f"Successfully applied to job {job_id}.")
+        add_already_applied_job(job_id)
+        return
+    print(f"Failed to apply to job {job_id}.")
 
-# Fill Contact Information
-first_name_input = driver.find_element(by=By.XPATH, value=FIRST_NAME_INPUT_XPATH)
-first_name_input.clear()
-first_name_input.send_keys(FIRST_NAME)
+if __name__ == "__main__":
+    driver = webdriver.Firefox()
+    actions = webdriver.ActionChains(driver)
 
-time.sleep(.5)
+    driver.get("https://jobs.northropgrumman.com/careerhub/")
 
-last_name_input = driver.find_element(by=By.XPATH, value=LAST_NAME_INPUT_XPATH)
-last_name_input.clear()
-last_name_input.send_keys(LAST_NAME)
+    driver.implicitly_wait(10)
 
-# Consideration for Additional Positions
-consideration_checkbox = driver.find_element(by=By.XPATH, value=CONSIDERATION_CHECKBOX_XPATH)
-scroll_to_element(driver, consideration_checkbox)
-actions.move_to_element(consideration_checkbox).click().perform()
+    input("Press Enter when ready...")
 
-# Ethnicity/Race Definitions
-ethnicity_checkbox = driver.find_element(by=By.XPATH, value=ETHNICITY_CHECKBOX_XPATH)
-scroll_to_element(driver, ethnicity_checkbox)
-actions.move_to_element(ethnicity_checkbox).click().perform()
+    # Go to Job Search
+    job_search_button = driver.find_element(by=By.XPATH, value=JOB_SEARCH_BUTTON_XPATH)
+    job_search_button.click()
 
-# Protected Veteran Definition
-protected_veteran_dropdown = driver.find_element(by=By.XPATH, value=PROTECTED_VETERAN_CHECKBOX_XPATH)
-scroll_to_element(driver, protected_veteran_dropdown)
-actions.move_to_element(protected_veteran_dropdown).click().perform()
-time.sleep(.5)
-not_a_veteran_option = driver.find_element(by=By.XPATH, value=NOT_A_VETERAN_OPTION_XPATH)
-actions.move_to_element(not_a_veteran_option).click().perform()
-time.sleep(.5)
-actions.move_to_element(protected_veteran_dropdown).click().perform()
-time.sleep(.5)
-do_not_wish_option = driver.find_element(by=By.XPATH, value=VETERAN_DO_NOT_WISH_TO_ANSWER_OPTION_XPATH)
-actions.move_to_element(do_not_wish_option).click().perform()
+    # Set location
+    location_search_input = driver.find_element(by=By.XPATH, value=LOCATION_SEARCH_INPUT_XPATH)
+    location_search_input.clear()
+    location_search_input.send_keys(LOCATION)
+    wait()
 
-# Personal Information Questions
-gender_dropdown = driver.find_element(by=By.XPATH, value=PERSONAL_INFO_INPUT_XPATH)
-scroll_to_element(driver, gender_dropdown)
-actions.move_to_element(gender_dropdown).click().perform()
-time.sleep(.5)
-male_option = driver.find_element(by=By.XPATH, value=MALE_OPTION_XPATH)
-actions.move_to_element(male_option).click().perform()
-time.sleep(.5)
-actions.move_to_element(gender_dropdown).click().perform()
-time.sleep(.5)
-prefer_not_option = driver.find_element(by=By.XPATH, value=GENDER_DO_NOT_WISH_TO_ANSWER_OPTION_XPATH)
-actions.move_to_element(prefer_not_option).click().perform()
+    search_go_button = driver.find_element(by=By.CSS_SELECTOR, value=SEARCH_GO_BUTTON_CSS)
+    actions.move_to_element(search_go_button).click().perform()
 
-# Disability Status
-disability_status_decline = driver.find_element(by=By.XPATH, value=DISABILITY_STATUS_DECLINE_XPATH)
-scroll_to_element(driver, disability_status_decline)
-actions.move_to_element(disability_status_decline).click().perform()
+    # wait(5)
+    # recommended_jobs = driver.find_element(by=By.CSS_SELECTOR, value=RECOMMENDED_JOBS_CSS)
+    # actions.move_to_element(recommended_jobs).click().perform()
 
-# Position Specific Questions
-try:
-    security_clearance_none = driver.find_element(by=By.XPATH, value=SECURITY_CLEARANCE_NONE_XPATH)
-    scroll_to_element(driver, security_clearance_none)
-    actions.move_to_element(security_clearance_none).click().perform()
-except:
-    pass
+    # Load all jobs
+    while True:
+        try:
+            load_more_button = driver.find_element(by=By.CSS_SELECTOR, value=LOAD_MORE_JOBS_CSS)
+            scroll_to_element(driver, load_more_button)
+            actions.move_to_element(load_more_button).click().perform()
+        except:
+            break
 
-try:
-    citizen_of_another_country = driver.find_element(by=By.XPATH, value=CITIZEN_OF_ANOTHER_COUNTRY_XPATH)
-    scroll_to_element(driver, citizen_of_another_country)
-    actions.move_to_element(citizen_of_another_country).click().perform()
+    # Get job IDs
+    job_cards = driver.find_elements(by=By.CLASS_NAME, value=JOB_CARD_CLASS_NAME)
+    job_ids = [card.get_attribute("data-card-id") for card in job_cards]
+    job_ids = [id.split("::")[1] for id in job_ids]
 
-    time.sleep(.5)
+    for job_id in job_ids:
+        if job_id in ALREADY_APPLIED_JOBS:
+            print(f"Already applied to job {job_id}, skipping.")
+            continue
+        apply(driver, actions, job_id)
+        wait()
 
-    yes_citizen_option = driver.find_element(by=By.XPATH, value=YES_CITIZEN_OF_ANOTHER_COUNTRY_XPATH)
-    actions.move_to_element(yes_citizen_option).click().perform()
-except:
-    pass
-
-# Terms and Conditions
-terms_and_conditions_checkbox = driver.find_element(by=By.XPATH, value=TERMS_AND_CONDITIONS_CHECKBOX_XPATH)
-scroll_to_element(driver, terms_and_conditions_checkbox)
-actions.move_to_element(terms_and_conditions_checkbox).click().perform()
-
-# Submit Application
-submit_application_button = driver.find_element(by=By.CSS_SELECTOR, value=SUBMIT_APPLICATION_BUTTON_CSS)
-actions.move_to_element(submit_application_button).click().perform()
-
-driver.quit()
+    driver.quit()
