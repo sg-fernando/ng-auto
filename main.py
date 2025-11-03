@@ -60,8 +60,12 @@ TERMS_AND_CONDITIONS_CHECKBOX_XPATH = '//*[@id="Terms_and_Conditions_Terms_Accep
 # Submit Application
 SUBMIT_APPLICATION_BUTTON_CSS = '[data-test-id="submitApplicationButton"]'
 
-def wait(seconds=3):
+def wait(seconds=1.5):
     time.sleep(seconds)
+
+def click_element(actions, element):
+    actions.move_to_element(element).click().perform()
+    # element.click()
 
 def scroll_to_element(driver, element):
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
@@ -72,7 +76,7 @@ def apply(driver, actions, job_id):
     # location = job_location.text
 
     # apply_button = driver.find_element(by=By.XPATH, value=APPLY_BUTTON_XPATH)
-    # apply_button.click()
+    # click_element(actions, apply_button)
 
     driver.get(f"https://jobs.northropgrumman.com/careerhub/explore/jobs/apply?pid={job_id}")
 
@@ -94,78 +98,78 @@ def apply(driver, actions, job_id):
     # Consideration for Additional Positions
     consideration_checkbox = driver.find_element(by=By.XPATH, value=CONSIDERATION_CHECKBOX_XPATH)
     scroll_to_element(driver, consideration_checkbox)
-    actions.move_to_element(consideration_checkbox).click().perform()
+    click_element(actions, consideration_checkbox)
 
     # Ethnicity/Race Definitions
     ethnicity_multiracial_checkbox = driver.find_element(by=By.XPATH, value=ETHNICITY_MULTIRACIAL_XPATH)
     scroll_to_element(driver, ethnicity_multiracial_checkbox)
-    actions.move_to_element(ethnicity_multiracial_checkbox).click().perform()
+    click_element(actions, ethnicity_multiracial_checkbox)
     wait()
     ethnicity_checkbox = driver.find_element(by=By.XPATH, value=ETHNICITY_DECLINE_XPATH)
-    actions.move_to_element(ethnicity_checkbox).click().perform()
+    click_element(actions, ethnicity_checkbox)
 
     # Protected Veteran Definition
     protected_veteran_dropdown = driver.find_element(by=By.XPATH, value=PROTECTED_VETERAN_CHECKBOX_XPATH)
     scroll_to_element(driver, protected_veteran_dropdown)
-    actions.move_to_element(protected_veteran_dropdown).click().perform()
+    click_element(actions, protected_veteran_dropdown)
     wait()
     not_a_veteran_option = driver.find_element(by=By.XPATH, value=NOT_A_VETERAN_OPTION_XPATH)
-    actions.move_to_element(not_a_veteran_option).click().perform()
+    click_element(actions, not_a_veteran_option)
     wait()
-    actions.move_to_element(protected_veteran_dropdown).click().perform()
+    click_element(actions, protected_veteran_dropdown)
     wait()
     do_not_wish_option = driver.find_element(by=By.XPATH, value=VETERAN_DO_NOT_WISH_TO_ANSWER_OPTION_XPATH)
-    actions.move_to_element(do_not_wish_option).click().perform()
+    click_element(actions, do_not_wish_option)
 
     # Personal Information Questions
     gender_dropdown = driver.find_element(by=By.XPATH, value=PERSONAL_INFO_INPUT_XPATH)
     scroll_to_element(driver, gender_dropdown)
-    actions.move_to_element(gender_dropdown).click().perform()
+    click_element(actions, gender_dropdown)
     wait()
     male_option = driver.find_element(by=By.XPATH, value=MALE_OPTION_XPATH)
-    actions.move_to_element(male_option).click().perform()
+    click_element(actions, male_option)
     wait()
-    actions.move_to_element(gender_dropdown).click().perform()
+    click_element(actions, gender_dropdown)
     wait()
     prefer_not_option = driver.find_element(by=By.XPATH, value=GENDER_DO_NOT_WISH_TO_ANSWER_OPTION_XPATH)
-    actions.move_to_element(prefer_not_option).click().perform()
+    click_element(actions, prefer_not_option)
 
     # Disability Status
     disability_status_decline = driver.find_element(by=By.XPATH, value=DISABILITY_STATUS_DECLINE_XPATH)
     scroll_to_element(driver, disability_status_decline)
-    actions.move_to_element(disability_status_decline).click().perform()
+    click_element(actions, disability_status_decline)
 
     # Position Specific Questions
     # try:
     #     security_clearance_none = driver.find_element(by=By.XPATH, value=SECURITY_CLEARANCE_NONE_XPATH)
     #     scroll_to_element(driver, security_clearance_none)
-    #     actions.move_to_element(security_clearance_none).click().perform()
+    #     click_element(actions, security_clearance_none)
     # except:
     #     pass
 
     try:
         citizen_of_another_country = driver.find_element(by=By.XPATH, value=CITIZEN_OF_ANOTHER_COUNTRY_XPATH)
         scroll_to_element(driver, citizen_of_another_country)
-        actions.move_to_element(citizen_of_another_country).click().perform()
+        click_element(actions, citizen_of_another_country)
 
         wait()
 
         yes_citizen_option = driver.find_element(by=By.XPATH, value=YES_CITIZEN_OF_ANOTHER_COUNTRY_XPATH)
-        actions.move_to_element(yes_citizen_option).click().perform()
+        click_element(actions, yes_citizen_option)
     except:
         pass
 
     # Terms and Conditions
     terms_and_conditions_checkbox = driver.find_element(by=By.XPATH, value=TERMS_AND_CONDITIONS_CHECKBOX_XPATH)
     scroll_to_element(driver, terms_and_conditions_checkbox)
-    actions.move_to_element(terms_and_conditions_checkbox).click().perform()
+    click_element(actions, terms_and_conditions_checkbox)
 
     # Submit Application
     submit_application_button = driver.find_element(by=By.CSS_SELECTOR, value=SUBMIT_APPLICATION_BUTTON_CSS)
     wait()
     # move mouse to button to click slowly and jiter a bit
     scroll_to_element(driver, submit_application_button)
-    actions.move_to_element(submit_application_button).click().perform()
+    click_element(actions, submit_application_button)
 
     # Check for successful submission
     wait(10)
@@ -190,7 +194,7 @@ if __name__ == "__main__":
 
     # Go to Job Search
     job_search_button = driver.find_element(by=By.XPATH, value=JOB_SEARCH_BUTTON_XPATH)
-    job_search_button.click()
+    click_element(actions, job_search_button)
 
     # Set location
     location_search_input = driver.find_element(by=By.XPATH, value=LOCATION_SEARCH_INPUT_XPATH)
@@ -199,18 +203,18 @@ if __name__ == "__main__":
     wait()
 
     search_go_button = driver.find_element(by=By.CSS_SELECTOR, value=SEARCH_GO_BUTTON_CSS)
-    actions.move_to_element(search_go_button).click().perform()
+    click_element(actions, search_go_button)
 
-    # wait(5)
-    # recommended_jobs = driver.find_element(by=By.CSS_SELECTOR, value=RECOMMENDED_JOBS_CSS)
-    # actions.move_to_element(recommended_jobs).click().perform()
+    wait(5)
+    recommended_jobs = driver.find_element(by=By.CSS_SELECTOR, value=RECOMMENDED_JOBS_CSS)
+    click_element(actions, recommended_jobs)
 
     # Load all jobs
     while True:
         try:
             load_more_button = driver.find_element(by=By.CSS_SELECTOR, value=LOAD_MORE_JOBS_CSS)
             scroll_to_element(driver, load_more_button)
-            actions.move_to_element(load_more_button).click().perform()
+            click_element(actions, load_more_button)
         except:
             break
 
