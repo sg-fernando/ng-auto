@@ -186,7 +186,7 @@ if __name__ == "__main__":
 
     driver.implicitly_wait(10)
 
-    input("Press Enter when ready...")
+    input("Press 'Enter' after logging in...")
 
     # Go to Job Search
     job_search_button = driver.find_element(by=By.XPATH, value=JOB_SEARCH_BUTTON_XPATH)
