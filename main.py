@@ -16,7 +16,6 @@ JOB_LOCATION_CSS = '.position-location'
 APPLY_BUTTON_XPATH = '//*[@id="fixed-apply-button"]'
 
 LOCATION_SEARCH_INPUT_XPATH = '//*[@id="location-search-box"]'
-LOCATION = "United States-Utah-Roy"
 SEARCH_GO_BUTTON_CSS = '[data-testid="search-bar-search-with-filters-go"]'
 
 RECOMMENDED_JOBS_CSS = '.link-button'
@@ -197,6 +196,7 @@ if __name__ == "__main__":
     click_element(actions, job_search_button)
 
     # Set location
+    LOCATION = "United States"
     location_search_input = driver.find_element(by=By.XPATH, value=LOCATION_SEARCH_INPUT_XPATH)
     location_search_input.clear()
     location_search_input.send_keys(LOCATION)
